@@ -2966,7 +2966,12 @@ LRESULT Viewer::Proc(UINT msg, WPARAM wp, LPARAM lp) {
         OnTimer(wp);
         return 0;
     case WM_SETFOCUS:
-        if (parent_) PostMessageW(parent_, WM_COMMAND, MAKEWPARAM(0, itm_focus), reinterpret_cast<LPARAM>(hwnd_));
+        // In Quick View the parent is a child window. There Total Commander
+        // answers itm_focus by moving the focus to the panel, so the keys never
+        // reach the viewer (#229). The panel's focus header works without it.
+        if (parent_ && !(GetWindowLongPtrW(parent_, GWL_STYLE) & WS_CHILD)) {
+            PostMessageW(parent_, WM_COMMAND, MAKEWPARAM(0, itm_focus), reinterpret_cast<LPARAM>(hwnd_));
+        }
         Invalidate();
         return 0;
     case WM_KILLFOCUS:

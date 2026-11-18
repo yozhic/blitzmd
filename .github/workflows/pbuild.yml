@@ -1,0 +1,35 @@
+name: Private fix build
+
+on:
+  push:
+    branches: [fix-qv-navigation]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: fix-qv-navigation
+
+      - name: Build x64 and x86, package dist/blitzmd.zip
+        shell: powershell
+        run: .\scripts\build.ps1 -Arch all -Package
+
+      - name: Get current date and time
+        id: getdate
+        shell: bash
+        run: |
+          get_date=$(date +"%Y%m%d_%H%M")
+          echo "current_date_time=$get_date" >> "$GITHUB_OUTPUT"
+
+      - name: Upload the package
+        uses: actions/upload-artifact@v7
+        with:
+          name: "blitzmd-private-fix-${{ steps.getdate.outputs.current_date_time }}"
+          path: dist/blitzmd.zip
+          if-no-files-found: error
